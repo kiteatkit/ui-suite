@@ -524,10 +524,112 @@ function patchWelcomePanel(panel) {
     if (typeof window.accountStorage?.setItem === 'function') {
         window.accountStorage.setItem('WelcomePage_ActiveTab', 'all');
     }
+
+    groupAllChatsByCharacter(panel);
+    bindAllChatsGroupToggles(panel);
 }
 
 function patchAllPanels() {
     document.querySelectorAll('.welcomePanel').forEach((panel) => patchWelcomePanel(panel));
+}
+
+function getStorageApi() {
+    if (window.accountStorage && typeof window.accountStorage.getItem === 'function' && typeof window.accountStorage.setItem === 'function') {
+        return window.accountStorage;
+    }
+    return window.localStorage;
+}
+
+function bindAllChatsGroupToggles(panel) {
+    const storage = getStorageApi();
+    const key = 'WelcomePage_AllChatsCollapsedGroups';
+    panel.querySelectorAll('.toggleAllChatsGroup').forEach((toggleButton) => {
+        if (!(toggleButton instanceof HTMLButtonElement) || toggleButton.dataset.bound === '1') return;
+        toggleButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const groupElement = toggleButton.closest('.allChatsCharacterGroup');
+            const entityId = groupElement?.getAttribute('data-entity-id');
+            if (!(groupElement instanceof HTMLElement) || !entityId) return;
+
+            const isCollapsed = groupElement.classList.toggle('collapsed');
+            const current = new Set(JSON.parse(storage.getItem(key) || '[]'));
+            if (isCollapsed) current.add(entityId);
+            else current.delete(entityId);
+            storage.setItem(key, JSON.stringify(Array.from(current)));
+        });
+        toggleButton.dataset.bound = '1';
+    });
+}
+
+function groupAllChatsByCharacter(panel) {
+    const storage = getStorageApi();
+    const collapsedGroupsKey = 'WelcomePage_AllChatsCollapsedGroups';
+    const allList = panel.querySelector('.welcomeAllPanel .allChatList, .welcomeAllPanel .recentChatList');
+    if (!(allList instanceof HTMLElement)) return;
+
+    // If grouped markup already exists, just apply persisted collapse state.
+    const existingGroups = Array.from(allList.querySelectorAll(':scope > .allChatsCharacterGroup'));
+    if (existingGroups.length > 0) {
+        const collapsed = new Set(JSON.parse(storage.getItem(collapsedGroupsKey) || '[]'));
+        existingGroups.forEach((group) => {
+            const id = group.getAttribute('data-entity-id');
+            if (id && collapsed.has(id)) group.classList.add('collapsed');
+        });
+        return;
+    }
+
+    const chats = Array.from(allList.querySelectorAll(':scope > .recentChat'));
+    if (!chats.length) return;
+
+    const groupsMap = new Map();
+    chats.forEach((chat) => {
+        if (!(chat instanceof HTMLElement)) return;
+        const groupId = chat.getAttribute('data-group') || '';
+        const avatarId = chat.getAttribute('data-avatar') || '';
+        const entityId = groupId ? `group:${groupId}` : `char:${avatarId}`;
+        const entityName = (chat.querySelector('.characterName')?.textContent || 'Unknown').trim() || 'Unknown';
+
+        if (!groupsMap.has(entityId)) {
+            groupsMap.set(entityId, { entityId, entityName, chats: [] });
+        }
+        groupsMap.get(entityId).chats.push(chat);
+    });
+
+    const sortedGroups = Array.from(groupsMap.values()).sort((a, b) => a.entityName.localeCompare(b.entityName));
+    const fragment = document.createDocumentFragment();
+    const collapsed = new Set(JSON.parse(storage.getItem(collapsedGroupsKey) || '[]'));
+
+    sortedGroups.forEach((groupData) => {
+        const groupElement = document.createElement('div');
+        groupElement.className = 'allChatsCharacterGroup';
+        groupElement.setAttribute('data-entity-id', groupData.entityId);
+
+        if (collapsed.has(groupData.entityId)) {
+            groupElement.classList.add('collapsed');
+        }
+
+        const header = document.createElement('div');
+        header.className = 'allChatsCharacterHeader';
+        header.innerHTML = `
+            <button class="menu_button menu_button_icon toggleAllChatsGroup" title="Collapse/expand chats" aria-label="Collapse/expand chats">
+                <i class="fa-solid fa-chevron-down fa-fw"></i>
+            </button>
+            <span></span>
+            <small></small>
+        `;
+
+        const titleEl = header.querySelector('span');
+        const countEl = header.querySelector('small');
+        if (titleEl) titleEl.textContent = groupData.entityName;
+        if (countEl) countEl.textContent = String(groupData.chats.length);
+
+        groupElement.append(header);
+        groupData.chats.forEach((chat) => groupElement.append(chat));
+        fragment.append(groupElement);
+    });
+
+    allList.innerHTML = '';
+    allList.append(fragment);
 }
 
 function isInsideChat() {
