@@ -13,6 +13,14 @@ const HEATMAP_WEEKS = 52;
 const HEATMAP_DAYS = HEATMAP_WEEKS * 7;
 const RECENT_LIMIT = 4;
 const CONTINUE_LIMIT = 2;
+const CHATS_CACHE_TTL_MS = 15000;
+const ENABLE_DASHBOARD = true;
+const ENABLE_OBSERVER = false;
+
+let chatsCache = { ts: 0, data: [] };
+let renderTimer = null;
+let renderInFlight = false;
+const SAFE_MODE = true;
 
 function onReady(fn) {
     if (typeof window.jQuery === 'function') {
@@ -157,11 +165,14 @@ function dashboardTemplate() {
 <div class="stStatsDashboard">
   <div class="stDashHeader">
     <div class="stDashTitle"><i class="fa-solid fa-chart-column"></i><span>Statistics</span></div>
-    <select class="stDashPeriod text_pole" aria-label="Statistics period">
-      <option value="all">All Time</option>
-      <option value="month">Last 30 Days</option>
-      <option value="week">Last 7 Days</option>
-    </select>
+    <div class="stDashActions">
+      <button type="button" class="stDashRefresh menu_button menu_button_icon" title="Refresh stats" aria-label="Refresh stats"><i class="fa-solid fa-rotate-right"></i></button>
+      <select class="stDashPeriod text_pole" aria-label="Statistics period">
+        <option value="all">All Time</option>
+        <option value="month">Last 30 Days</option>
+        <option value="week">Last 7 Days</option>
+      </select>
+    </div>
   </div>
 
   <div class="stStatsRow">
@@ -195,7 +206,11 @@ function dashboardTemplate() {
 </div>`;
 }
 
-async function fetchAllChats(context) {
+async function fetchAllChats(context, force = false) {
+    if (!force && Date.now() - chatsCache.ts < CHATS_CACHE_TTL_MS && Array.isArray(chatsCache.data) && chatsCache.data.length) {
+        return chatsCache.data;
+    }
+
     const response = await fetch('/api/chats/recent', {
         method: 'POST',
         headers: context.getRequestHeaders(),
@@ -208,7 +223,7 @@ async function fetchAllChats(context) {
     const data = await response.json();
     if (!Array.isArray(data)) return [];
 
-    return data
+    const mapped = data
         .map((chatItem) => {
             const character = context.characters.find((x) => x.avatar === chatItem.avatar);
             const group = context.groups.find((x) => x.id === chatItem.group);
@@ -236,6 +251,9 @@ async function fetchAllChats(context) {
             };
         })
         .sort((a, b) => (b._timestamp || 0) - (a._timestamp || 0));
+
+    chatsCache = { ts: Date.now(), data: mapped };
+    return mapped;
 }
 
 function collectChatsFromPanel(panel, context) {
@@ -410,7 +428,7 @@ function renderContinue(root, recentChats, context) {
     }
 }
 
-async function renderIntoPanel(panel) {
+async function renderIntoPanel(panel, force = false) {
     const context = getContext();
     let root = panel.querySelector(SELECTOR_ROOT);
     const isNewRoot = !(root instanceof HTMLElement);
@@ -419,8 +437,9 @@ async function renderIntoPanel(panel) {
         root = panel.querySelector(SELECTOR_ROOT);
     }
     if (!(root instanceof HTMLElement)) return;
+    if (!isNewRoot && !force && root.dataset.initialized === '1') return;
 
-    let allChats = await fetchAllChats(context);
+    let allChats = await fetchAllChats(context, force);
     const domChats = collectChatsFromPanel(panel, context);
     if (!allChats.length || aggregateUsage(allChats).messages <= 0) {
         allChats = domChats;
@@ -428,6 +447,7 @@ async function renderIntoPanel(panel) {
     if (!allChats.length) return;
 
     const periodSelect = root.querySelector('.stDashPeriod');
+    const refreshButton = root.querySelector('.stDashRefresh');
     const heatmapGrid = root.querySelector('.stHeatmapGrid');
     const heatmapScroll = root.querySelector('.stHeatmapScroll');
     if (!(periodSelect instanceof HTMLSelectElement) || !(heatmapGrid instanceof HTMLElement) || !(heatmapScroll instanceof HTMLElement)) {
@@ -450,17 +470,43 @@ async function renderIntoPanel(panel) {
         }
     };
 
-    periodSelect.onchange = run;
+    if (!periodSelect.dataset.bound) {
+        periodSelect.onchange = run;
+        periodSelect.dataset.bound = '1';
+    }
+    if (refreshButton instanceof HTMLButtonElement && !refreshButton.dataset.bound) {
+        refreshButton.addEventListener('click', () => {
+            chatsCache.ts = 0;
+            void renderIntoPanel(panel, true);
+        });
+        refreshButton.dataset.bound = '1';
+    }
     run();
+    root.dataset.initialized = '1';
 }
 
-async function renderAllPanels() {
+async function renderAllPanels(force = false) {
+    if (renderInFlight) return;
+    renderInFlight = true;
     const panels = Array.from(document.querySelectorAll(SELECTOR_PANEL));
-    for (const panel of panels) {
-        if (panel instanceof HTMLElement) {
-            await renderIntoPanel(panel);
+    try {
+        for (const panel of panels) {
+            if (panel instanceof HTMLElement) {
+                await renderIntoPanel(panel, force);
+            }
         }
+    } finally {
+        renderInFlight = false;
     }
+}
+
+function scheduleRender(force = false) {
+    if (renderTimer) {
+        clearTimeout(renderTimer);
+    }
+    renderTimer = setTimeout(() => {
+        void renderAllPanels(force);
+    }, 120);
 }
 
 function patchWelcomePanel(panel) {
@@ -485,7 +531,12 @@ function patchAllPanels() {
 }
 
 function isInsideChat() {
-    const context = getContext();
+    let context;
+    try {
+        context = getContext();
+    } catch {
+        return false;
+    }
     const inWelcomeScreen = Boolean(document.querySelector(`${CHAT_ROOT_SELECTOR} .welcomePanel`));
     if (inWelcomeScreen) return false;
     return context.characterId !== undefined || Boolean(context.groupId) || context.chat.length > 0;
@@ -534,41 +585,56 @@ function initTheme() {
 }
 
 function init() {
-    const context = getContext();
-
+    let context = null;
+    try {
+        context = getContext();
+    } catch (error) {
+        console.error('[ui-suite] getContext failed', error);
+    }
     initTheme();
     patchAllPanels();
-    void renderAllPanels();
     renderBackButton();
 
-    const rerenderStats = () => void renderAllPanels();
-    const rerenderBack = () => renderBackButton();
+    if (ENABLE_DASHBOARD) {
+        scheduleRender(true);
+    }
 
-    context.eventSource.on(context.eventTypes.APP_READY, rerenderStats);
-    context.eventSource.on(context.eventTypes.CHAT_CHANGED, () => {
-        patchAllPanels();
-        rerenderStats();
-        rerenderBack();
-    });
-    context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, () => {
-        rerenderStats();
-        rerenderBack();
-    });
-    context.eventSource.on(context.eventTypes.MESSAGE_DELETED, () => {
-        rerenderStats();
-        rerenderBack();
-    });
+    if (context?.eventSource && context?.eventTypes) {
+        context.eventSource.on(context.eventTypes.APP_READY, () => {
+            if (ENABLE_DASHBOARD) {
+                scheduleRender(true);
+            }
+        });
+        context.eventSource.on(context.eventTypes.CHAT_CHANGED, () => {
+            patchAllPanels();
+            if (ENABLE_DASHBOARD) {
+                scheduleRender(false);
+            }
+            renderBackButton();
+        });
+        context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, () => {
+            renderBackButton();
+        });
+        context.eventSource.on(context.eventTypes.MESSAGE_DELETED, () => {
+            renderBackButton();
+        });
+    }
 
-    const observer = new MutationObserver(() => {
-        patchAllPanels();
-        if (document.querySelector(SELECTOR_PANEL)) {
-            void renderAllPanels();
+    if (ENABLE_OBSERVER) {
+        const chatRoot = document.querySelector(CHAT_ROOT_SELECTOR);
+        if (chatRoot instanceof HTMLElement) {
+            const observer = new MutationObserver(() => {
+                const panel = chatRoot.querySelector('.welcomePanel');
+                if (panel instanceof HTMLElement && !panel.querySelector(SELECTOR_ROOT)) {
+                    patchWelcomePanel(panel);
+                    if (ENABLE_DASHBOARD) scheduleRender(false);
+                }
+                renderBackButton();
+            });
+            observer.observe(chatRoot, { childList: true, subtree: true });
         }
-        renderBackButton();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    }
 
-    setInterval(renderBackButton, 750);
     console.debug(`[${EXT_ID}] loaded`);
 }
 

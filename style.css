@@ -249,6 +249,23 @@ body.st-theme-starter #chat:has(.welcomePanel) .mes[type="assistant_message"] {
     gap: 8px;
 }
 
+.welcomePanel .stStatsDashboard .stDashActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.welcomePanel .stStatsDashboard .stDashRefresh {
+    margin: 0;
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
 .welcomePanel .stStatsDashboard .stDashTitle {
     display: inline-flex;
     align-items: center;
