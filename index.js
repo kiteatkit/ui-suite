@@ -7,7 +7,7 @@ const BUTTON_CONTAINER_ID = 'leftSendForm';
 const CHAT_ROOT_SELECTOR = '#chat';
 const CLOSE_CHAT_SELECTOR = '#options #option_close_chat';
 
-const SELECTOR_PANEL = '#chat .welcomePanel';
+const SELECTOR_PANEL = '#chat .welcomePanel, #chat .welcomeScreen, #chat .welcome-page';
 const SELECTOR_ROOT = '.stStatsDashboard';
 const HEATMAP_WEEKS = 52;
 const HEATMAP_DAYS = HEATMAP_WEEKS * 7;
@@ -512,16 +512,13 @@ function scheduleRender(force = false) {
 
 function patchWelcomePanel(panel) {
     if (!(panel instanceof HTMLElement)) return;
-    if (panel.dataset.uiSuitePatched === '1') return;
 
     panel.querySelectorAll('.showRecentChats, .hideRecentChats').forEach((el) => el.remove());
     panel.classList.remove('recentHidden');
     panel.classList.add('activeAllChats');
 
-    const recentTab = panel.querySelector('.welcomeTab[data-tab="recent"]');
-    if (recentTab instanceof HTMLButtonElement) {
-        recentTab.textContent = 'recent chats';
-    }
+    ensureWelcomeControls(panel);
+    bindWelcomeTabs(panel);
 
     if (typeof window.accountStorage?.setItem === 'function') {
         window.accountStorage.setItem('WelcomePage_ActiveTab', 'all');
@@ -529,11 +526,27 @@ function patchWelcomePanel(panel) {
 
     groupAllChatsByCharacter(panel);
     bindAllChatsGroupToggles(panel);
-    panel.dataset.uiSuitePatched = '1';
 }
 
 function patchAllPanels() {
-    document.querySelectorAll('.welcomePanel').forEach((panel) => patchWelcomePanel(panel));
+    const panels = Array.from(document.querySelectorAll(SELECTOR_PANEL));
+    panels.forEach((panel) => {
+        if (panel instanceof HTMLElement) {
+            patchWelcomePanel(panel);
+        }
+    });
+
+    // Fallback for versions where class names changed but recent chat cards are still present.
+    if (!panels.length) {
+        const chatRoot = document.querySelector(CHAT_ROOT_SELECTOR);
+        if (!(chatRoot instanceof HTMLElement)) return;
+        const lists = Array.from(chatRoot.querySelectorAll('.recentChatList, .recentChatsList'));
+        const fallbackList = lists.find((el) => el.querySelector('.recentChat'));
+        const fallbackPanel = fallbackList?.closest('div');
+        if (fallbackPanel instanceof HTMLElement) {
+            patchWelcomePanel(fallbackPanel);
+        }
+    }
 }
 
 function getStorageApi() {
@@ -543,10 +556,98 @@ function getStorageApi() {
     return window.localStorage;
 }
 
+function ensureWelcomeControls(panel) {
+    const header = panel.querySelector('.recentChatsTitle, .welcomeRecentTitle, .welcomeChatsTitle');
+    if (!(header instanceof HTMLElement)) return;
+
+    let recentTab = header.querySelector('.welcomeTab[data-tab="recent"]');
+    let allTab = header.querySelector('.welcomeTab[data-tab="all"]');
+
+    if (!(recentTab instanceof HTMLButtonElement)) {
+        recentTab = document.createElement('button');
+        recentTab.type = 'button';
+        recentTab.className = 'menu_button welcomeTab';
+        recentTab.setAttribute('data-tab', 'recent');
+        header.prepend(recentTab);
+    }
+    recentTab.textContent = 'recent chats';
+
+    if (!(allTab instanceof HTMLButtonElement)) {
+        allTab = document.createElement('button');
+        allTab.type = 'button';
+        allTab.className = 'menu_button welcomeTab';
+        allTab.setAttribute('data-tab', 'all');
+        allTab.textContent = 'All Chats';
+        recentTab.insertAdjacentElement('afterend', allTab);
+    }
+
+    const headerWrap = panel.querySelector('.welcomeHeader, .welcomeTopRow, .welcomeHeaderRow');
+    if (headerWrap instanceof HTMLElement && !headerWrap.querySelector('.welcomeSearchWrap')) {
+        const searchWrap = document.createElement('div');
+        searchWrap.className = 'welcomeSearchWrap';
+        searchWrap.innerHTML = '<input class="text_pole welcomeChatSearch" type="text" autocomplete="off" placeholder="Search chats...">';
+        const shortcuts = headerWrap.querySelector('.welcomeShortcuts');
+        if (shortcuts) shortcuts.insertAdjacentElement('beforebegin', searchWrap);
+        else headerWrap.append(searchWrap);
+    }
+
+    const recentPanel = panel.querySelector('.welcomeRecentPanel, .welcomeRecent, .recentChatsPanel, .welcomeChatsPanel');
+    if (recentPanel instanceof HTMLElement) {
+        recentPanel.classList.add('welcomeRecentPanel', 'welcomeTabPanel');
+    }
+
+    let allPanel = panel.querySelector('.welcomeAllPanel, .allChatsPanel');
+    if (!(allPanel instanceof HTMLElement) && recentPanel instanceof HTMLElement) {
+        allPanel = document.createElement('div');
+        allPanel.className = 'welcomeRecent welcomeTabPanel welcomeAllPanel';
+        allPanel.innerHTML = '<div class="recentChatList allChatList"></div>';
+        recentPanel.insertAdjacentElement('afterend', allPanel);
+    }
+}
+
+function bindWelcomeTabs(panel) {
+    const storage = getStorageApi();
+    const activeTabKey = 'WelcomePage_ActiveTab';
+    const tabs = panel.querySelectorAll('.welcomeTab');
+    tabs.forEach((tab) => {
+        if (!(tab instanceof HTMLButtonElement) || tab.dataset.bound === '1') return;
+        tab.addEventListener('click', () => {
+            const tabName = tab.getAttribute('data-tab');
+            const isAllTab = tabName === 'all';
+            panel.classList.toggle('activeAllChats', isAllTab);
+            storage.setItem(activeTabKey, isAllTab ? 'all' : 'recent');
+        });
+        tab.dataset.bound = '1';
+    });
+
+    const savedTab = storage.getItem(activeTabKey);
+    panel.classList.toggle('activeAllChats', savedTab === 'all');
+
+    const searchInput = panel.querySelector('.welcomeChatSearch, .welcomeSearchInput, .chatSearchInput');
+    if (searchInput instanceof HTMLInputElement && searchInput.dataset.bound !== '1') {
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim().toLowerCase();
+            const items = Array.from(panel.querySelectorAll('.recentChat'));
+
+            items.forEach((item) => {
+                const text = (item.textContent || '').toLowerCase();
+                item.classList.toggle('searchHidden', query.length > 0 && !text.includes(query));
+            });
+
+            const groupedLists = Array.from(panel.querySelectorAll('.allChatsCharacterGroup'));
+            groupedLists.forEach((groupElement) => {
+                const visibleItems = groupElement.querySelectorAll('.recentChat:not(.searchHidden)');
+                groupElement.classList.toggle('searchHidden', visibleItems.length === 0);
+            });
+        });
+        searchInput.dataset.bound = '1';
+    }
+}
+
 function bindAllChatsGroupToggles(panel) {
     const storage = getStorageApi();
     const key = 'WelcomePage_AllChatsCollapsedGroups';
-    panel.querySelectorAll('.toggleAllChatsGroup').forEach((toggleButton) => {
+    panel.querySelectorAll('.toggleAllChatsGroup, .toggleChatsGroup').forEach((toggleButton) => {
         if (!(toggleButton instanceof HTMLButtonElement) || toggleButton.dataset.bound === '1') return;
         toggleButton.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -567,7 +668,7 @@ function bindAllChatsGroupToggles(panel) {
 function groupAllChatsByCharacter(panel) {
     const storage = getStorageApi();
     const collapsedGroupsKey = 'WelcomePage_AllChatsCollapsedGroups';
-    const allList = panel.querySelector('.welcomeAllPanel .allChatList, .welcomeAllPanel .recentChatList');
+    const allList = panel.querySelector('.welcomeAllPanel .allChatList, .welcomeAllPanel .recentChatList, .allChatsPanel .allChatList, .allChatsPanel .recentChatList');
     if (!(allList instanceof HTMLElement)) return;
 
     // If grouped markup already exists, just apply persisted collapse state.
@@ -581,7 +682,18 @@ function groupAllChatsByCharacter(panel) {
         return;
     }
 
-    const chats = Array.from(allList.querySelectorAll(':scope > .recentChat'));
+    let chats = Array.from(allList.querySelectorAll(':scope > .recentChat'));
+    if (!chats.length) {
+        const recentList = panel.querySelector('.welcomeRecentPanel .recentChatList, .welcomeRecent .recentChatList, .recentChatsPanel .recentChatList, .welcomeChatsPanel .recentChatList');
+        if (recentList instanceof HTMLElement) {
+            const sourceChats = Array.from(recentList.querySelectorAll(':scope > .recentChat'));
+            sourceChats.forEach((chat) => {
+                if (!(chat instanceof HTMLElement)) return;
+                allList.append(chat.cloneNode(true));
+            });
+            chats = Array.from(allList.querySelectorAll(':scope > .recentChat'));
+        }
+    }
     if (!chats.length) return;
 
     const groupsMap = new Map();
@@ -734,7 +846,7 @@ function init() {
                 }
                 patchTimer = setTimeout(() => {
                     const panel = chatRoot.querySelector('.welcomePanel');
-                    if (panel instanceof HTMLElement && panel.dataset.uiSuitePatched !== '1') {
+                    if (panel instanceof HTMLElement) {
                         patchWelcomePanel(panel);
                         if (ENABLE_DASHBOARD) scheduleRender(false);
                     }

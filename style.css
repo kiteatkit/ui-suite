@@ -214,13 +214,23 @@ body.st-theme-starter *::after {
     box-shadow: none !important;
 }
 
-/* Restore native checkbox/radio visuals (check marks were hidden by global border reset). */
-body.st-theme-starter input[type="checkbox"],
-body.st-theme-starter input[type="radio"] {
+/* Restore settings checkboxes/radios without breaking custom controls in other panels. */
+body.st-theme-starter #user-settings-block input[type="checkbox"],
+body.st-theme-starter #user-settings-block input[type="radio"] {
     appearance: auto !important;
     -webkit-appearance: auto !important;
     accent-color: var(--theme-starter-accent-2) !important;
     border-color: var(--theme-starter-text-2) !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+    position: static !important;
+    pointer-events: auto !important;
+    vertical-align: middle;
+    cursor: pointer;
 }
 
 body.st-theme-starter #chat:has(.welcomePanel) .mes[type="assistant_message"] {
