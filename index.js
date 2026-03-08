@@ -15,11 +15,12 @@ const RECENT_LIMIT = 4;
 const CONTINUE_LIMIT = 2;
 const CHATS_CACHE_TTL_MS = 15000;
 const ENABLE_DASHBOARD = true;
-const ENABLE_OBSERVER = false;
+const ENABLE_OBSERVER = true;
 
 let chatsCache = { ts: 0, data: [] };
 let renderTimer = null;
 let renderInFlight = false;
+let patchTimer = null;
 const SAFE_MODE = true;
 
 function onReady(fn) {
@@ -511,6 +512,7 @@ function scheduleRender(force = false) {
 
 function patchWelcomePanel(panel) {
     if (!(panel instanceof HTMLElement)) return;
+    if (panel.dataset.uiSuitePatched === '1') return;
 
     panel.querySelectorAll('.showRecentChats, .hideRecentChats').forEach((el) => el.remove());
     panel.classList.remove('recentHidden');
@@ -527,6 +529,7 @@ function patchWelcomePanel(panel) {
 
     groupAllChatsByCharacter(panel);
     bindAllChatsGroupToggles(panel);
+    panel.dataset.uiSuitePatched = '1';
 }
 
 function patchAllPanels() {
@@ -726,12 +729,17 @@ function init() {
         const chatRoot = document.querySelector(CHAT_ROOT_SELECTOR);
         if (chatRoot instanceof HTMLElement) {
             const observer = new MutationObserver(() => {
-                const panel = chatRoot.querySelector('.welcomePanel');
-                if (panel instanceof HTMLElement && !panel.querySelector(SELECTOR_ROOT)) {
-                    patchWelcomePanel(panel);
-                    if (ENABLE_DASHBOARD) scheduleRender(false);
+                if (patchTimer) {
+                    clearTimeout(patchTimer);
                 }
-                renderBackButton();
+                patchTimer = setTimeout(() => {
+                    const panel = chatRoot.querySelector('.welcomePanel');
+                    if (panel instanceof HTMLElement && panel.dataset.uiSuitePatched !== '1') {
+                        patchWelcomePanel(panel);
+                        if (ENABLE_DASHBOARD) scheduleRender(false);
+                    }
+                    renderBackButton();
+                }, 80);
             });
             observer.observe(chatRoot, { childList: true, subtree: true });
         }
