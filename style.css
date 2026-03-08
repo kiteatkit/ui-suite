@@ -1,0 +1,479 @@
+#st_chat_nav_back_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    padding: 4px;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--SmartThemeBodyColor);
+    cursor: pointer;
+    line-height: 1;
+    box-shadow: none;
+    transition: opacity 0.12s ease;
+}
+
+#st_chat_nav_back_button:hover {
+    opacity: 0.78;
+}
+
+#st_chat_nav_back_button:active {
+    opacity: 0.62;
+}
+
+#st_chat_nav_back_button i {
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    #st_chat_nav_back_button {
+        padding: 4px;
+        margin-right: 6px;
+    }
+}
+
+.welcomePanel .recentChatsTitle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.welcomePanel .welcomeTab[data-tab="recent"],
+.welcomePanel .welcomeTab[data-tab="all"] {
+    white-space: nowrap;
+}
+
+.welcomePanel .allChatsCharacterHeader {
+    padding-left: 4px;
+}
+
+.welcomePanel .allChatsCharacterHeader .toggleAllChatsGroup {
+    margin-left: -2px;
+}
+
+body.st-theme-starter {
+    --theme-starter-bg-1: #201d18;
+    --theme-starter-bg-2: #1a1815;
+    --theme-starter-bg-3: #2a251d;
+    --theme-starter-accent-1: #c15f3c;
+    --theme-starter-accent-2: #c15f3c;
+    --theme-starter-surface-1: #2a251d;
+    --theme-starter-card-bg: color-mix(in srgb, var(--theme-starter-bg-3) 82%, var(--theme-starter-bg-1));
+    --theme-starter-text-1: #d7cdc2;
+    --theme-starter-text-2: #bcae9f;
+
+    --SmartThemeBodyColor: var(--theme-starter-text-1);
+    --SmartThemeEmColor: var(--theme-starter-text-2);
+    --SmartThemeUnderlineColor: var(--theme-starter-text-2);
+    --SmartThemeQuoteColor: var(--theme-starter-accent-2);
+    --SmartThemeBlurTintColor: var(--theme-starter-bg-1);
+    --SmartThemeChatTintColor: var(--theme-starter-surface-1);
+    --SmartThemeUserMesBlurTintColor: var(--theme-starter-bg-2);
+    --SmartThemeBotMesBlurTintColor: var(--theme-starter-bg-3);
+    --SmartThemeBorderColor: transparent;
+    --SmartThemeShadowColor: rgb(0 0 0 / 45%);
+
+    background: linear-gradient(180deg, var(--theme-starter-bg-1), var(--theme-starter-bg-1));
+    color: var(--theme-starter-text-1);
+}
+
+body.st-theme-starter #top-bar,
+body.st-theme-starter #top-settings-holder,
+body.st-theme-starter .drawer-content,
+body.st-theme-starter .popup,
+body.st-theme-starter #chat,
+body.st-theme-starter #send_form {
+    background-color: var(--theme-starter-bg-1);
+    color: var(--theme-starter-text-1);
+}
+
+body.st-theme-starter .mes,
+body.st-theme-starter .menu_button,
+body.st-theme-starter .drawer-content .inline-drawer,
+body.st-theme-starter .popup,
+body.st-theme-starter textarea,
+body.st-theme-starter input,
+body.st-theme-starter select,
+body.st-theme-starter .character_select,
+body.st-theme-starter .group_select,
+body.st-theme-starter .bogus_folder_select {
+    background-color: var(--theme-starter-bg-2);
+}
+
+body.st-theme-starter .welcomeRecent .recentChat {
+    background-color: var(--theme-starter-card-bg) !important;
+}
+
+body.st-theme-starter .welcomeRecent .recentChat:hover {
+    background-color: color-mix(in srgb, var(--theme-starter-bg-3) 70%, var(--theme-starter-accent-2) 8%) !important;
+}
+
+body.st-theme-starter #rm_print_characters_block .character_select,
+body.st-theme-starter #rm_print_characters_block .group_select,
+body.st-theme-starter #rm_print_characters_block .bogus_folder_select {
+    background-color: var(--theme-starter-card-bg) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    margin-bottom: 6px !important;
+    padding: 8px 10px !important;
+}
+
+body.st-theme-starter #rm_print_characters_block .character_select:hover,
+body.st-theme-starter #rm_print_characters_block .group_select:hover,
+body.st-theme-starter #rm_print_characters_block .bogus_folder_select:hover {
+    background-color: color-mix(in srgb, var(--theme-starter-bg-3) 70%, var(--theme-starter-accent-2) 8%) !important;
+}
+
+body.st-theme-starter #user_avatar_block .avatar-container,
+body.st-theme-starter #user_avatar_block .bogus_folder_select {
+    background-color: var(--theme-starter-card-bg) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    margin-bottom: 6px !important;
+    padding: 8px 10px !important;
+}
+
+body.st-theme-starter #user_avatar_block .avatar-container:hover,
+body.st-theme-starter #user_avatar_block .bogus_folder_select:hover {
+    background-color: color-mix(in srgb, var(--theme-starter-bg-3) 70%, var(--theme-starter-accent-2) 8%) !important;
+}
+
+body.st-theme-starter #extensions_settings .inline-drawer-toggle.inline-drawer-header,
+body.st-theme-starter #extensions_settings2 .inline-drawer-toggle.inline-drawer-header,
+body.st-theme-starter #user-settings-block h4,
+body.st-theme-starter .standoutHeader {
+    background: var(--theme-starter-card-bg) !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 6px 10px !important;
+}
+
+body.st-theme-starter #extensions_settings .inline-drawer-toggle.inline-drawer-header:hover,
+body.st-theme-starter #extensions_settings2 .inline-drawer-toggle.inline-drawer-header:hover,
+body.st-theme-starter .standoutHeader.inline-drawer-header:hover {
+    filter: brightness(1.08) !important;
+}
+
+body.st-theme-starter #extensions_settings .inline-drawer,
+body.st-theme-starter #extensions_settings2 .inline-drawer,
+body.st-theme-starter .inline-drawer {
+    background: #201d18 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+body.st-theme-starter .inline-drawer:last-child {
+    margin-bottom: 0;
+}
+
+body.st-theme-starter .inline-drawer-toggle.inline-drawer-header {
+    border-radius: 12px !important;
+    padding: 6px 10px !important;
+}
+
+body.st-theme-starter .welcomePanel .welcomeHeader,
+body.st-theme-starter .welcomePanel .welcomeShortcuts,
+body.st-theme-starter .welcomePanel .welcomeShortcuts .menu_button,
+body.st-theme-starter .welcomePanel .welcomeShortcuts button,
+body.st-theme-starter #chat .mes[type="welcome_prompt"] .mes_text > .flex-container,
+body.st-theme-starter #chat .mes[type="welcome_prompt"] .mes_text > .flex-container .menu_button,
+body.st-theme-starter #chat .mes[type="welcome_prompt"] .mes_text > .flex-container button,
+body.st-theme-starter #chat .mes[type="welcome_prompt"] {
+    background-color: #201d18 !important;
+}
+
+body.st-theme-starter .menu_button:hover,
+body.st-theme-starter button:hover {
+    background-color: color-mix(in srgb, var(--theme-starter-accent-2) 14%, var(--theme-starter-bg-2));
+}
+
+body.st-theme-starter h1,
+body.st-theme-starter h2,
+body.st-theme-starter h3,
+body.st-theme-starter h4,
+body.st-theme-starter .standoutHeader,
+body.st-theme-starter .inline-drawer-header,
+body.st-theme-starter .welcomePanel .welcomeHeaderVersionDisplay,
+body.st-theme-starter .welcomePanel .recentChatsTitle .welcomeTab {
+    color: #c15f3c !important;
+}
+
+body.st-theme-starter #extensions_settings .inline-drawer-toggle.inline-drawer-header,
+body.st-theme-starter #extensions_settings2 .inline-drawer-toggle.inline-drawer-header {
+    color: #d5cdc2 !important;
+}
+
+body.st-theme-starter *,
+body.st-theme-starter *::before,
+body.st-theme-starter *::after {
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+body.st-theme-starter #chat:has(.welcomePanel) .mes[type="assistant_message"] {
+    display: none;
+}
+
+.welcomePanel .stStatsDashboard {
+    --dash-bg: #201d18;
+    --dash-surface: #2a251d;
+    --dash-accent: #c15f3c;
+    --dash-positive: #74a56a;
+    --dash-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--dash-bg);
+}
+
+.welcomePanel .stStatsDashboard .stDashHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.welcomePanel .stStatsDashboard .stDashTitle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--SmartThemeBodyColor);
+}
+
+.welcomePanel .stStatsDashboard .stDashPeriod {
+    margin: 0;
+    min-width: 130px;
+    width: auto;
+}
+
+.welcomePanel .stStatsDashboard .stStatsRow {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.welcomePanel .stStatsDashboard .stStatCard,
+.welcomePanel .stStatsDashboard .stHeatmapSection,
+.welcomePanel .stStatsDashboard .stTopSection,
+.welcomePanel .stStatsDashboard .stActivitySection,
+.welcomePanel .stStatsDashboard .stContinueSection {
+    background: var(--dash-surface);
+    border-radius: var(--dash-radius);
+    padding: 10px;
+}
+
+.welcomePanel .stStatsDashboard .stStatLabel {
+    font-size: calc(var(--mainFontSize) * 0.68);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--SmartThemeEmColor);
+}
+
+.welcomePanel .stStatsDashboard .stStatValue {
+    margin-top: 4px;
+    font-size: calc(var(--mainFontSize) * 1.25);
+    font-weight: 800;
+    color: var(--SmartThemeBodyColor);
+}
+
+.welcomePanel .stStatsDashboard .stStatSub {
+    margin-top: 3px;
+    font-size: calc(var(--mainFontSize) * 0.72);
+    color: var(--dash-positive);
+}
+
+.welcomePanel .stStatsDashboard .stMiddleRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 10px;
+}
+
+.welcomePanel .stStatsDashboard .stBottomRow {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: 10px;
+}
+
+.welcomePanel .stStatsDashboard .stSectionTitle {
+    margin-bottom: 8px;
+    font-size: calc(var(--mainFontSize) * 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--SmartThemeEmColor);
+}
+
+.welcomePanel .stStatsDashboard .stHeatmapScroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+.welcomePanel .stStatsDashboard .stHeatmapGrid {
+    --heatmap-gap: 3px;
+    --heatmap-grid-height: 126px;
+    display: inline-flex;
+    gap: var(--heatmap-gap);
+    height: var(--heatmap-grid-height);
+    align-items: flex-start;
+    width: max-content;
+}
+
+.welcomePanel .stStatsDashboard .stHeatmapCol {
+    display: flex;
+    flex-direction: column;
+    gap: var(--heatmap-gap);
+}
+
+.welcomePanel .stStatsDashboard .stHeatmapCell {
+    --heatmap-cell-size: calc((var(--heatmap-grid-height) - (6 * var(--heatmap-gap))) / 7);
+    width: var(--heatmap-cell-size);
+    height: var(--heatmap-cell-size);
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--dash-surface) 70%, var(--dash-bg));
+}
+
+.welcomePanel .stStatsDashboard .stHeatmapCell.l1 { background: color-mix(in srgb, var(--dash-positive) 35%, var(--dash-surface)); }
+.welcomePanel .stStatsDashboard .stHeatmapCell.l2 { background: color-mix(in srgb, var(--dash-positive) 50%, var(--dash-surface)); }
+.welcomePanel .stStatsDashboard .stHeatmapCell.l3 { background: color-mix(in srgb, var(--dash-positive) 65%, var(--dash-surface)); }
+.welcomePanel .stStatsDashboard .stHeatmapCell.l4 { background: color-mix(in srgb, var(--dash-positive) 85%, var(--dash-surface)); }
+
+.welcomePanel .stStatsDashboard .stTopList,
+.welcomePanel .stStatsDashboard .stActivityList,
+.welcomePanel .stStatsDashboard .stContinueList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.welcomePanel .stStatsDashboard .stTopRow {
+    display: grid;
+    grid-template-columns: 16px 28px minmax(0, 1fr) minmax(90px, 1fr);
+    align-items: center;
+    gap: 8px;
+}
+
+.welcomePanel .stStatsDashboard .stTopRank {
+    font-size: calc(var(--mainFontSize) * 0.72);
+    color: var(--SmartThemeEmColor);
+}
+
+.welcomePanel .stStatsDashboard .stTopAvatar,
+.welcomePanel .stStatsDashboard .stTopAvatar img,
+.welcomePanel .stStatsDashboard .stContinueAvatar,
+.welcomePanel .stStatsDashboard .stContinueAvatar img {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+}
+
+.welcomePanel .stStatsDashboard .stTopInfo,
+.welcomePanel .stStatsDashboard .stContinueInfo {
+    min-width: 0;
+}
+
+.welcomePanel .stStatsDashboard .stTopName,
+.welcomePanel .stStatsDashboard .stContinueName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+}
+
+.welcomePanel .stStatsDashboard .stTopMsgs,
+.welcomePanel .stStatsDashboard .stContinuePreview {
+    font-size: calc(var(--mainFontSize) * 0.7);
+    color: var(--SmartThemeEmColor);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.welcomePanel .stStatsDashboard .stTopBarWrap {
+    width: 100%;
+    height: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dash-surface) 65%, var(--dash-bg));
+    overflow: hidden;
+}
+
+.welcomePanel .stStatsDashboard .stTopBar {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--dash-accent);
+}
+
+.welcomePanel .stStatsDashboard .stActivityItem {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    font-size: calc(var(--mainFontSize) * 0.78);
+}
+
+.welcomePanel .stStatsDashboard .stActivityDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--dash-accent);
+}
+
+.welcomePanel .stStatsDashboard .stActivityDot.new {
+    background: var(--dash-positive);
+}
+
+.welcomePanel .stStatsDashboard .stActivityText {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--SmartThemeBodyColor);
+}
+
+.welcomePanel .stStatsDashboard .stActivityTime {
+    font-size: calc(var(--mainFontSize) * 0.7);
+    color: var(--SmartThemeEmColor);
+}
+
+.welcomePanel .stStatsDashboard .stContinueCard {
+    margin: 0;
+    border: none;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 8px;
+    border-radius: var(--dash-radius);
+    padding: 8px;
+    text-align: left;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--dash-surface) 70%, var(--dash-bg));
+    color: inherit;
+}
+
+.welcomePanel .stStatsDashboard .stContinueCard:hover {
+    background: color-mix(in srgb, var(--dash-surface) 50%, var(--dash-accent) 10%);
+}
+
+.welcomePanel .stStatsDashboard .stContinueArrow {
+    color: var(--SmartThemeEmColor);
+}
+
+@media screen and (max-width: 1000px) {
+    .welcomePanel .stStatsDashboard .stStatsRow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .welcomePanel .stStatsDashboard .stMiddleRow,
+    .welcomePanel .stStatsDashboard .stBottomRow {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
