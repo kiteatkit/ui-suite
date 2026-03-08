@@ -468,11 +468,15 @@ function patchWelcomePanel(panel) {
 
     panel.querySelectorAll('.showRecentChats, .hideRecentChats').forEach((el) => el.remove());
     panel.classList.remove('recentHidden');
+    panel.classList.add('activeAllChats');
 
     const recentTab = panel.querySelector('.welcomeTab[data-tab="recent"]');
     if (recentTab instanceof HTMLButtonElement) {
         recentTab.textContent = 'recent chats';
-        recentTab.classList.remove('active');
+    }
+
+    if (typeof window.accountStorage?.setItem === 'function') {
+        window.accountStorage.setItem('WelcomePage_ActiveTab', 'all');
     }
 }
 
